@@ -20,7 +20,10 @@ class Domains extends AdminController
     public function dns_probe()
     {
         if (!staff_can('view', 'fq_saas_domains')) {
-            show_404();
+            header('Content-Type: application/json');
+            http_response_code(403);
+            echo json_encode(['error' => _l('fq_saas_permission_denied')]);
+            return;
         }
         $domain = $this->input->post('domain', true) ?: $this->input->get('domain', true);
         header('Content-Type: application/json');

@@ -54,4 +54,20 @@ class Affiliates extends AdminController
         }
         $this->load->view('affiliates/form', $data);
     }
+
+    public function delete($id)
+    {
+        if (!staff_can('delete', 'fq_saas_affiliates')) {
+            return access_denied('fq_saas_affiliates');
+        }
+        $id = (int) $id;
+        $ok = $this->fq_saas_extensions_model->delete_affiliate($id);
+        if ($ok) {
+            fq_saas_log('affiliate_deleted', ['id' => $id]);
+            set_alert('success', _l('deleted', _l('fq_saas_affiliates')));
+        } else {
+            set_alert('danger', _l('fq_saas_error_completing_action'));
+        }
+        return redirect(admin_url(FQ_SAAS_ROUTE_NAME . '/affiliates'));
+    }
 }

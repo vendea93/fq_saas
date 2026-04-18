@@ -238,7 +238,7 @@ function fq_saas_module_init_menu_items()
 
         if (staff_can('view', 'fq_saas_companies')) {
             $CI->app_menu->add_sidebar_children_item(FQ_SAAS_MODULE_WHITELABEL_NAME, [
-                'slug' => FQ_SAAS_MODULE_WHITELABEL_NAME . '_company',
+                'slug' => FQ_SAAS_MODULE_WHITELABEL_NAME . '_companies',
                 'name' => _l('fq_saas_tenants'),
                 'icon' => 'fa fa-university',
                 'href' => admin_url(FQ_SAAS_ROUTE_NAME . '/companies'),
@@ -246,7 +246,7 @@ function fq_saas_module_init_menu_items()
             ]);
         }
 
-        if (staff_can('view', 'fq_saas_packages')) {
+        if (staff_can('view', 'fq_saas_companies') && staff_can('view', 'invoices')) {
             $CI->app_menu->add_sidebar_children_item(FQ_SAAS_MODULE_WHITELABEL_NAME, [
                 'slug' => FQ_SAAS_MODULE_WHITELABEL_NAME . '_invoices',
                 'name' => _l('fq_saas_invoices'),
@@ -336,8 +336,13 @@ $is_tenant = fq_saas_is_tenant();
 $is_admin = is_admin();
 $is_client = is_client_logged_in();
 
-// Perfex allow admin and client login session on the same browser. We need to optimize is_client in such scenario
-if ($is_admin && $is_client && is_subclass_of($CI->router->fetch_class(), 'AdminController')) {
+// Perfex allows admin and client login on the same browser. When a dual-session user lands on
+// an admin-area controller, treat them as admin (some controllers extend AdminController via
+// custom base classes / traits, so rely on instanceof rather than class-name subclass lookup).
+if ($is_admin && $is_client && (
+    $CI instanceof AdminController
+    || is_subclass_of($CI, 'AdminController')
+)) {
     $is_client = false;
 }
 
@@ -467,45 +472,49 @@ if (!$is_tenant) {
 
 
 
+    /**
+     * Register permissions for every admin-context request (priority 5, before menu builder at 50).
+     *
+     * Must be registered regardless of whether the current staff is a super admin — otherwise
+     * non-admin staff visiting the role permission screen will not see fq_saas capabilities,
+     * and staff_can() checks return false for never-registered capabilities.
+     */
+    hooks()->add_action('admin_init', 'fq_saas_permissions', 5);
+    if (!function_exists('fq_saas_permissions')) {
+        function fq_saas_permissions()
+        {
+            $view_only = ['capabilities' => ['view' => _l('fq_saas_permission_view')]];
+            register_staff_capabilities('fq_saas_dashboard', $view_only, _l('fq_saas') . ' ' . _l('fq_saas_dashboard'));
+
+            $crud = [
+                'capabilities' => [
+                    'view'   => _l('fq_saas_permission_view'),
+                    'create' => _l('fq_saas_permission_create'),
+                    'edit'   => _l('fq_saas_permission_edit'),
+                    'delete' => _l('fq_saas_permission_delete'),
+                ],
+            ];
+            register_staff_capabilities('fq_saas_companies',  $crud, _l('fq_saas') . ' ' . _l('fq_saas_companies'));
+            register_staff_capabilities('fq_saas_packages',   $crud, _l('fq_saas') . ' ' . _l('fq_saas_packages'));
+            register_staff_capabilities('fq_saas_api_user',   $crud, _l('fq_saas') . ' ' . _l('fq_saas_api_user'));
+            register_staff_capabilities('fq_saas_landing',    $crud, _l('fq_saas') . ' ' . _l('fq_saas_landing_builder'));
+            register_staff_capabilities('fq_saas_cms',        $crud, _l('fq_saas') . ' ' . _l('fq_saas_cms'));
+            register_staff_capabilities('fq_saas_coupons',    $crud, _l('fq_saas') . ' ' . _l('fq_saas_coupons'));
+            register_staff_capabilities('fq_saas_affiliates', $crud, _l('fq_saas') . ' ' . _l('fq_saas_affiliates'));
+            register_staff_capabilities('fq_saas_domains',    $crud, _l('fq_saas') . ' ' . _l('fq_saas_domains'));
+
+            $view_edit = [
+                'capabilities' => [
+                    'view' => _l('fq_saas_permission_view'),
+                    'edit' => _l('fq_saas_permission_edit'),
+                ],
+            ];
+            register_staff_capabilities('fq_saas_settings', $view_edit, _l('fq_saas') . ' ' . _l('fq_saas_settings'));
+        }
+    }
+
     /******* SUPER ADMIN PANEL SPECIFIC HOOKS *********/
     if ($is_admin || is_staff_member()) {
-        if ($is_admin) {
-            /**
-             * Register permissions (run before menu builder at priority 50).
-             */
-            hooks()->add_action('admin_init', 'fq_saas_permissions', 5);
-            function fq_saas_permissions()
-            {
-                $capabilities = [];
-                $capabilities['capabilities'] = [
-                    'view' => _l('fq_saas_permission_view'),
-                ];
-                register_staff_capabilities('fq_saas_dashboard', $capabilities, _l('fq_saas') . ' ' . _l('fq_saas_dashboard'));
-
-                $capabilities = [];
-                $capabilities['capabilities'] = [
-                    'view' => _l('fq_saas_permission_view'),
-                    'create' => _l('fq_saas_permission_create'),
-                    'edit' => _l('fq_saas_permission_edit'),
-                    'delete' => _l('fq_saas_permission_delete'),
-                ];
-                register_staff_capabilities('fq_saas_companies', $capabilities, _l('fq_saas') . ' ' . _l('fq_saas_companies'));
-                register_staff_capabilities('fq_saas_packages', $capabilities, _l('fq_saas') . ' ' . _l('fq_saas_packages'));
-                register_staff_capabilities('fq_saas_api_user', $capabilities, _l('fq_saas') . ' ' . _l('fq_saas_api_user'));
-                register_staff_capabilities('fq_saas_landing', $capabilities, _l('fq_saas') . ' ' . _l('fq_saas_landing_builder'));
-                register_staff_capabilities('fq_saas_cms', $capabilities, _l('fq_saas') . ' ' . _l('fq_saas_cms'));
-                register_staff_capabilities('fq_saas_coupons', $capabilities, _l('fq_saas') . ' ' . _l('fq_saas_coupons'));
-                register_staff_capabilities('fq_saas_affiliates', $capabilities, _l('fq_saas') . ' ' . _l('fq_saas_affiliates'));
-                register_staff_capabilities('fq_saas_domains', $capabilities, _l('fq_saas') . ' ' . _l('fq_saas_domains'));
-
-                $capabilities = [];
-                $capabilities['capabilities'] = [
-                    'view' => _l('fq_saas_permission_view'),
-                    'edit' => _l('fq_saas_permission_edit'),
-                ];
-                register_staff_capabilities('fq_saas_settings', $capabilities, _l('fq_saas') . ' ' . _l('fq_saas_settings'));
-            }
-        }
 
         //dashboard
         if (staff_can('view', 'fq_saas_dashboard')) {
@@ -622,11 +631,16 @@ if (!$is_tenant) {
 
 
 /********OTHER SPECIFIC HOOKS ******/
+/**
+ * Load every feature hook file exactly once. require_once guards against duplicate registration
+ * when middleware_hooks.php already pulled the same file (e.g. tenant mode + admin mode in one
+ * request), and the is_file() check keeps us safe if a filter injected a non-existent path.
+ */
 $folder_path = __DIR__ . '/hooks/';
-$feature_hook_files = glob($folder_path . '*.php');
+$feature_hook_files = glob($folder_path . '*.php') ?: [];
 $feature_hook_files = hooks()->apply_filters('fq_saas_extra_hook_files', $feature_hook_files);
 foreach ($feature_hook_files as $file) {
-    if (is_file($file)) {
+    if (is_string($file) && is_file($file)) {
         require_once $file;
     }
 }

@@ -1423,12 +1423,18 @@ trait Main
 
         $apiUser = fq_saas_api_users_by_token($authorization);
 
-        $token = $apiUser->token;
-        if (empty($token) || strlen($token) < 32) {
+        // Token not matched to any api user (would otherwise trigger a PHP 8 fatal on null->token).
+        if (!is_object($apiUser) || empty($apiUser->token ?? '')) {
+            return $this->response_json(['error' => _l('fq_saas_api_invalid_credential')], 401);
+        }
+
+        $token = (string) $apiUser->token;
+        if (strlen($token) < 32) {
             return $this->response_json(['error' => _l('fq_saas_api_key_invalid')], 402);
         }
 
-        if ($token !== $authorization) {
+        // Constant-time comparison to prevent token timing attacks.
+        if (!hash_equals($token, (string) $authorization)) {
             return $this->response_json(['error' => _l('fq_saas_api_invalid_credential')], 403);
         }
 
@@ -1438,7 +1444,9 @@ trait Main
         }
 
 
-        $access = (int)($apiUser->permissions->{$apiMethod}->{strtolower($method)} ?? 0);
+        $permissions = is_object($apiUser->permissions ?? null) ? $apiUser->permissions : new \stdClass();
+        $methodPermissions = is_object($permissions->{$apiMethod} ?? null) ? $permissions->{$apiMethod} : new \stdClass();
+        $access = (int) ($methodPermissions->{strtolower($method)} ?? 0);
         if ($access !== 1) {
             return $this->response_json(['error' => _l('fq_saas_permission_denied')], 405);
         }

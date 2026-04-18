@@ -117,6 +117,30 @@ class Fq_saas_extensions_model extends App_Model
         return (bool) $this->db->where('id', $id)->delete($this->t('coupons'));
     }
 
+    public function delete_landing_page(int $id): bool
+    {
+        if (!$this->db->table_exists($this->t('landing_pages'))) {
+            return false;
+        }
+        return (bool) $this->db->where('id', $id)->delete($this->t('landing_pages'));
+    }
+
+    public function delete_cms_page(int $id): bool
+    {
+        if (!$this->db->table_exists($this->t('cms_pages'))) {
+            return false;
+        }
+        return (bool) $this->db->where('id', $id)->delete($this->t('cms_pages'));
+    }
+
+    public function delete_affiliate(int $id): bool
+    {
+        if (!$this->db->table_exists($this->t('affiliates'))) {
+            return false;
+        }
+        return (bool) $this->db->where('id', $id)->delete($this->t('affiliates'));
+    }
+
     public function affiliates(): array
     {
         if (!$this->db->table_exists($this->t('affiliates'))) {

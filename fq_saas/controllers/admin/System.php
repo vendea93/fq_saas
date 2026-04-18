@@ -66,6 +66,10 @@ class System extends AdminController
 
     public function save_purchase_code()
     {
+        if (!staff_can('edit', 'fq_saas_settings')) {
+            return access_denied('fq_saas_settings');
+        }
+
         if ($this->input->post()) {
             $status = 'danger';
             $message = '';
@@ -119,6 +123,10 @@ class System extends AdminController
 
     public function get_module($module)
     {
+        if (!staff_can('edit', 'fq_saas_settings')) {
+            return access_denied('fq_saas_settings');
+        }
+
         @ini_set('memory_limit', '512M');
         @ini_set('max_execution_time', 360);
 
@@ -235,6 +243,10 @@ class System extends AdminController
 
     public function after_get_module($module)
     {
+        if (!staff_can('edit', 'fq_saas_settings')) {
+            return access_denied('fq_saas_settings');
+        }
+
         $status = $this->input->get('status', true);
         $message = $this->input->get('message', true);
 
@@ -257,6 +269,10 @@ class System extends AdminController
 
     public function activate($module_name)
     {
+        if (!staff_can('edit', 'fq_saas_settings')) {
+            return access_denied('fq_saas_settings');
+        }
+
         $this->app_modules->activate($module_name);
         $this->app_modules->upgrade_database($module_name);
         return redirect($this->returnUrl);
@@ -264,6 +280,10 @@ class System extends AdminController
 
     public function deactivate($module_name)
     {
+        if (!staff_can('edit', 'fq_saas_settings')) {
+            return access_denied('fq_saas_settings');
+        }
+
         $this->app_modules->deactivate($module_name);
         return redirect($this->returnUrl);
     }

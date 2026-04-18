@@ -293,6 +293,7 @@ class Companies extends AdminController
             if (!$_id)
                 throw new \Exception(_l('fq_saas_error_completing_action'), 1);
 
+            header('Content-Type: application/json');
             echo json_encode([
                 'status' => 'success',
                 'message' => _l('updated_successfully', _l('fq_saas_company'))
@@ -300,6 +301,8 @@ class Companies extends AdminController
             exit;
         } catch (\Throwable $th) {
 
+            header('Content-Type: application/json');
+            http_response_code(422);
             echo json_encode([
                 'status' => 'danger',
                 'message' => $th->getMessage()
@@ -317,7 +320,14 @@ class Companies extends AdminController
      */
     public function deploy($company_id = '')
     {
+        if (!staff_can('edit', 'fq_saas_companies')) {
+            header('Content-Type: application/json');
+            http_response_code(403);
+            echo json_encode(['error' => _l('fq_saas_permission_denied')]);
+            exit();
+        }
 
+        header('Content-Type: application/json');
         echo json_encode(fq_saas_deployer($company_id));
         exit();
     }

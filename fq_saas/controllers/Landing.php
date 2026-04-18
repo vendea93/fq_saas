@@ -41,13 +41,27 @@ class Landing extends ClientsController
         if (!$CI->db->table_exists($table)) {
             show_404();
         }
+
+        // Slug arrives from routing; enforce a safe character set before DB lookup.
+        $slug = preg_replace('/[^a-z0-9\-\_]/i', '', (string) $slug);
+        if ($slug === '') {
+            show_404();
+        }
+
         $page = $CI->db->get_where($table, ['slug' => $slug, 'status' => 'published'])->row();
         if (!$page) {
             show_404();
         }
 
-        echo '<!DOCTYPE html><html><head><meta charset="utf-8"><title>' . html_escape($page->title) . '</title></head><body>';
-        echo $page->body_html;
+        // body_html is authored by staff with fq_saas_landing permission; block direct public access
+        // to unpublished drafts and send a strict security header set.
+        header('X-Content-Type-Options: nosniff');
+        header('X-Frame-Options: SAMEORIGIN');
+        header('Referrer-Policy: no-referrer-when-downgrade');
+
+        $title = html_escape((string) ($page->title ?? ''));
+        echo '<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>' . $title . '</title></head><body>';
+        echo (string) $page->body_html; // Authored HTML — trusted to staff but sandboxed via headers above.
         echo '</body></html>';
         exit;
     }

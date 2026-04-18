@@ -37,6 +37,20 @@ function fq_saas_remove_installation($remove_data = false)
         if ($CI->db->table_exists(fq_saas_table('client_metadata'))) {
             $CI->db->query("DROP TABLE `" . fq_saas_table('client_metadata') . "`;");
         }
+        if ($CI->db->table_exists(fq_saas_table('api_users'))) {
+            $CI->db->query("DROP TABLE `" . fq_saas_table('api_users') . "`;");
+        }
+
+        // FQ SaaS extension tables (fq_saas_* prefix) introduced by CMS/Coupons/Affiliates/Landing/Activity modules.
+        if (function_exists('fq_saas_extensions_table')) {
+            $ext_tables = ['activity_log', 'landing_pages', 'coupons', 'affiliates', 'cms_pages'];
+            foreach ($ext_tables as $t) {
+                $name = fq_saas_extensions_table($t);
+                if ($CI->db->table_exists($name)) {
+                    $CI->db->query("DROP TABLE `" . $name . "`;");
+                }
+            }
+        }
     }
 }
 

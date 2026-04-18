@@ -51,4 +51,20 @@ class Landing_builder extends AdminController
         $data['page']  = $id ? $this->fq_saas_extensions_model->get_landing_page((int) $id) : null;
         $this->load->view('landing_builder/form', $data);
     }
+
+    public function delete($id)
+    {
+        if (!staff_can('delete', 'fq_saas_landing')) {
+            return access_denied('fq_saas_landing');
+        }
+        $id = (int) $id;
+        $ok = $this->fq_saas_extensions_model->delete_landing_page($id);
+        if ($ok) {
+            fq_saas_log('landing_page_deleted', ['id' => $id]);
+            set_alert('success', _l('deleted', _l('fq_saas_landing_builder')));
+        } else {
+            set_alert('danger', _l('fq_saas_error_completing_action'));
+        }
+        return redirect(admin_url(FQ_SAAS_ROUTE_NAME . '/landing_builder'));
+    }
 }
