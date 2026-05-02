@@ -58,7 +58,22 @@ foreach ($rResult as $aRow) {
         $_data = $aRow[$customFields[$i]];
 
         if ($customFields[$i] == 'name') {
-            $_data = '<a href="' . $viewLink . '" target="_blank">' . e($_data) . ' <i class="fa fa-external-link"></i></a>';
+            $_data = '<a href="' . $viewLink . '" target="_blank" rel="noopener">' . e($_data) . ' <i class="fa fa-external-link"></i></a>';
+            if (!empty($aRow['slug']) && $aRow['slug'] !== 'go') {
+                $tenantObj = (object) $aRow;
+                $adminSub = fq_saas_tenant_admin_url($tenantObj, '', 'auto');
+                $host = fq_saas_get_saas_default_host();
+                $alt = fq_saas_get_saas_alternative_host();
+                if (!empty($alt)) {
+                    $host = $alt;
+                }
+                $subBase = fq_saas_prep_url($aRow['slug'] . '.' . $host . '/');
+                $_data .= '<div class="tw-mt-1 tw-text-xs text-muted tw-leading-snug">';
+                $_data .= '<span class="tw-font-medium">' . _l('fq_saas_company_subdomain_label') . '</span><br>';
+                $_data .= '<a href="' . e($adminSub) . '" target="_blank" rel="noopener" class="tw-break-all">' . e($adminSub) . '</a>';
+                $_data .= '<div class="tw-mt-0.5 tw-opacity-90">' . _l('fq_saas_company_subdomain_public_hint') . ' <a href="' . e($subBase) . '" target="_blank" rel="noopener" class="tw-break-all">' . e($subBase) . '</a></div>';
+                $_data .= '</div>';
+            }
         } elseif ($customFields[$i] == 'company') {
             $_data = '<a href="' . admin_url('clients/client/' . $aRow['userid']) . '">' . e($_data) . '</a>';
             $_data .= '<div class="row-options tw-ml-9">';

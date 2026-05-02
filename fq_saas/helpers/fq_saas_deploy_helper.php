@@ -1428,22 +1428,33 @@ function fq_saas_reset_demo_instances()
     $reset_key = $key . '_reset_hour';
     $history_key = $key . '_last_reset_time';
 
-    $hours_interval = get_option($reset_key);
-    $last_reset_stamp = (int)get_option($history_key);
-    if (!empty($last_reset_stamp)) {
-        // Check if hours interval has elapsed otherwise return
-        $diff = time() - $last_reset_stamp;
-        $hours_elapsed = $diff / 3600; // Convert the difference to hours
+    $hours_interval = (float) get_option($reset_key);
+    if ($hours_interval <= 0) {
+        return;
+    }
 
-        if ($hours_elapsed < $hours_interval) {
-            return; // Interval has not elapsed, exit the function
-        }
+    $last_reset_stamp = (int)get_option($history_key);
+    if (empty($last_reset_stamp)) {
+        // First run after enabling demo reset; start the timer from now instead of resetting instantly.
+        update_option($history_key, time());
+        return;
+    }
+
+    // Check if hours interval has elapsed otherwise return
+    $diff = time() - $last_reset_stamp;
+    $hours_elapsed = $diff / 3600; // Convert the difference to hours
+
+    if ($hours_elapsed < $hours_interval) {
+        return; // Interval has not elapsed, exit the function
     }
 
     $instances = get_option($key);
     $instances = empty($instances) ? [] : json_decode($instances);
 
     foreach ($instances as $slug) {
+        if ($slug === 'go') {
+            continue;
+        }
         $company = $CI->fq_saas_model->get_company_by_slug($slug);
         if (empty($company->slug)) continue;
 

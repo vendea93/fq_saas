@@ -47,6 +47,10 @@ if (fq_saas_is_tenant()) {
     }
 }
 
+$route[$fq_saas_admin_uri . '/apps/modules'] = 'fq_saas/admin/tenant_modules_page';
+$route[$fq_saas_admin_uri . '/apps/modules/(:any)'] = 'fq_saas/admin/tenant_modules_page/$1';
+$route[$fq_saas_admin_uri . '/apps/modules/(:any)/(:any)/(:any)'] = 'fq_saas/admin/tenant_modules_page/$1/$2/$3';
+
 /*
  * FQ SaaS admin + API routes — registered for master and tenant.
  * Previously these lived only inside if (!fq_saas_is_tenant()), so any false-positive tenant detection

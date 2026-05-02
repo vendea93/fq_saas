@@ -2,6 +2,10 @@
 
 defined('BASEPATH') or exit('No direct script access allowed');
 
+if (!function_exists('fq_saas_get_days_until')) {
+    require_once __DIR__ . '/fq_saas_helper.php';
+}
+
 /**
  * Tenant Middleware function to handle tenant-related checks.
  *
@@ -225,14 +229,19 @@ function  fq_saas_filter_tenant_loadable_modules($activated_modules)
  */
 function fq_saas_attach_hooks()
 {
+    $fq_saas_hooks = function_exists('hooks') ? hooks() : null;
+    if (!$fq_saas_hooks) {
+        return;
+    }
+
     // Register hooks for middleware
-    hooks()->add_action('app_init',  'fq_saas_tenant_middleware');
+    $fq_saas_hooks->add_action('app_init',  'fq_saas_tenant_middleware');
 
     // Register hook for module loading filter
-    hooks()->add_filter('modules_to_load', 'fq_saas_filter_tenant_loadable_modules', PHP_INT_MAX);
+    $fq_saas_hooks->add_filter('modules_to_load', 'fq_saas_filter_tenant_loadable_modules', PHP_INT_MAX);
 
     // Override app_modules
-    hooks()->add_filter('modules_to_load', function ($activated_modules) {
+    $fq_saas_hooks->add_filter('modules_to_load', function ($activated_modules) {
         $CI = &get_instance();
         $CI->load->library(FQ_SAAS_MODULE_NAME . '/saas_app_modules');
         $CI->app_modules = $CI->saas_app_modules;
@@ -286,7 +295,9 @@ function fq_saas_middleware_force_load_lang()
             get_instance()->load->helper('module');
 
         register_language_files(FQ_SAAS_MODULE_NAME, [FQ_SAAS_MODULE_NAME]);
-        hooks()->do_action('after_load_admin_language');
+        if (function_exists('hooks') && hooks()) {
+            hooks()->do_action('after_load_admin_language');
+        }
     }
 }
 

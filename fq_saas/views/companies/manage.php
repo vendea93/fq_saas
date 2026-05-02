@@ -12,6 +12,43 @@
                         </a>
                     </div>
                 <?php } ?>
+                <?php
+                $CI = &get_instance();
+                if (!empty($companies) && is_array($companies)) {
+                    $demoHosts = [];
+                    foreach ($companies as $c) {
+                        if (empty($c->slug) || $c->slug === 'go') {
+                            continue;
+                        }
+                        $demoHosts[] = [
+                            'name' => $c->name,
+                            'slug' => $c->slug,
+                            'admin' => fq_saas_tenant_admin_url($c, '', 'auto'),
+                        ];
+                    }
+                    if ($demoHosts !== []) {
+                        ?>
+                <div class="panel_s tw-mb-4">
+                    <div class="panel-heading tw-font-semibold">
+                        <?php echo _l('fq_saas_companies_subdomain_overview_title'); ?>
+                    </div>
+                    <div class="panel-body tw-text-sm">
+                        <p class="text-muted tw-mb-3"><?php echo _l('fq_saas_companies_subdomain_overview_hint'); ?></p>
+                        <ul class="list-unstyled tw-space-y-2 tw-mb-0">
+                            <?php foreach ($demoHosts as $row) { ?>
+                            <li>
+                                <span class="tw-font-medium"><?php echo e($row['name']); ?></span>
+                                <span class="text-muted">(<?php echo e($row['slug']); ?>)</span><br>
+                                <a href="<?php echo e($row['admin']); ?>" target="_blank" rel="noopener" class="tw-break-all"><?php echo e($row['admin']); ?></a>
+                            </li>
+                            <?php } ?>
+                        </ul>
+                    </div>
+                </div>
+                        <?php
+                    }
+                }
+                ?>
                 <div class="panel_s tenants-table">
                     <div class="panel-body panel-table-full">
                         <?php render_datatable([

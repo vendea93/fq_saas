@@ -106,6 +106,87 @@ function fq_saas_get_upload_path_by_type($type, $fullpath = true)
     return $path;
 }
 
+function fq_saas_shared_company_asset_path($filename = '')
+{
+    $filename = ltrim((string) $filename, '/');
+    if ($filename === '') {
+        return FCPATH . 'uploads/company/';
+    }
+
+    // Prefer tenant-local asset path when running inside tenant context.
+    if (function_exists('fq_saas_is_tenant') && fq_saas_is_tenant() && function_exists('fq_saas_tenant_slug')) {
+        $tenant_slug = strtolower((string) fq_saas_tenant_slug());
+        if ($tenant_slug !== '') {
+            $tenant_path = FCPATH . 'uploads/tenants/' . $tenant_slug . '/company/' . $filename;
+            if (file_exists($tenant_path)) {
+                return $tenant_path;
+            }
+        }
+    }
+
+    $shared_path = FCPATH . 'uploads/company/' . $filename;
+    if (file_exists($shared_path)) {
+        return $shared_path;
+    }
+
+    // Fallback for missing/stale option values.
+    $global_fallback = FCPATH . 'uploads/company/flowquest_logo_global.png';
+    if (file_exists($global_fallback)) {
+        return $global_fallback;
+    }
+
+    return $shared_path;
+}
+
+function fq_saas_shared_company_asset_url($filename = '')
+{
+    $filename = ltrim((string) $filename, '/');
+    $base_url = defined('APP_BASE_URL_DEFAULT') ? rtrim(APP_BASE_URL_DEFAULT, '/') . '/' : rtrim(base_url(), '/') . '/';
+
+    if ($filename === '') {
+        return $base_url . 'uploads/company/';
+    }
+
+    // Prefer tenant-local asset URL when available.
+    if (function_exists('fq_saas_is_tenant') && fq_saas_is_tenant() && function_exists('fq_saas_tenant_slug')) {
+        $tenant_slug = strtolower((string) fq_saas_tenant_slug());
+        if ($tenant_slug !== '') {
+            $tenant_path = FCPATH . 'uploads/tenants/' . $tenant_slug . '/company/' . $filename;
+            if (file_exists($tenant_path)) {
+                return $base_url . 'uploads/tenants/' . rawurlencode($tenant_slug) . '/company/' . rawurlencode($filename);
+            }
+        }
+    }
+
+    $shared_path = FCPATH . 'uploads/company/' . $filename;
+    if (file_exists($shared_path)) {
+        return $base_url . 'uploads/company/' . rawurlencode($filename);
+    }
+
+    if (file_exists(FCPATH . 'uploads/company/flowquest_logo_global.png')) {
+        return $base_url . 'uploads/company/flowquest_logo_global.png';
+    }
+
+    return $base_url . 'uploads/company/' . rawurlencode($filename);
+}
+
+function fq_saas_shared_option($key, $default = '')
+{
+    if (fq_saas_is_tenant() && function_exists('fq_saas_init_shared_options')) {
+        fq_saas_init_shared_options();
+    }
+
+    $value = '';
+
+    if (fq_saas_is_tenant() && function_exists('fq_saas_get_options')) {
+        $value = fq_saas_get_options($key);
+    } else {
+        $value = get_option($key);
+    }
+
+    return $value !== '' ? $value : $default;
+}
+
 /**
  * Return tenant upload directory with trailing slash
  *

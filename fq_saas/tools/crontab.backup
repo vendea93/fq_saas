@@ -1,0 +1,1 @@
+* * * * * wget -q -O- https://crm.flowquest.pl/cron/index > /dev/null 2>&1

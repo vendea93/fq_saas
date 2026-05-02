@@ -32,10 +32,12 @@ function fq_saas_tenant_base_url($tenant, $endpoint = '', $method = 'auto')
 
     if (!$package && !fq_saas_is_tenant()) {
         $CI = &get_instance();
-        $package = $CI->fq_saas_model->get_company_invoice($tenant->clientid);
+        $package = $CI->fq_saas_model->get_company_invoice($tenant->clientid ?? 0);
     }
 
-    $can_use_custom_domain = $package->metadata->enable_custom_domain ?? false;
+    $pkg_meta = ($package && isset($package->metadata)) ? (is_object($package->metadata) ? $package->metadata : (object) (array) $package->metadata) : null;
+
+    $can_use_custom_domain = $pkg_meta && !empty($pkg_meta->enable_custom_domain);
 
     // If has custom domain, and available for use
     if (!empty($tenant->custom_domain) && $can_use_custom_domain) {
@@ -43,8 +45,9 @@ function fq_saas_tenant_base_url($tenant, $endpoint = '', $method = 'auto')
         if ($method === 'auto') return $custom_domain;
     }
 
-    // If subdomain is enabled on package, use subdomain
-    $can_use_subdomain = $package->metadata->enable_subdomain ?? false;
+    // If subdomain is enabled on package, use subdomain (FlowQuest: filter może włączyć subdomenę dla demo)
+    $can_use_subdomain = $pkg_meta && !empty($pkg_meta->enable_subdomain);
+    $can_use_subdomain = hooks()->apply_filters('fq_saas_tenant_can_use_subdomain', (bool) $can_use_subdomain, $tenant, $package, $method);
     if ($can_use_subdomain) {
 
         $app_host = fq_saas_get_saas_default_host();
@@ -240,6 +243,70 @@ function fq_saas_reserved_slugs()
 }
 
 /**
+ * Determine whether the tenant is a template instance.
+ *
+ * Template tenants are internal blueprints and should be hidden from public
+ * instance pickers and switchers.
+ *
+ * @param object|array|null $tenant
+ * @return bool
+ */
+function fq_saas_is_template_instance($tenant)
+{
+    if (empty($tenant)) {
+        return false;
+    }
+
+    $tenant = is_array($tenant) ? (object) $tenant : $tenant;
+
+    $slug = strtolower(trim((string) ($tenant->slug ?? '')));
+    $name = strtolower(trim((string) ($tenant->name ?? '')));
+    $role = strtolower(trim((string) ($tenant->metadata->instance_role ?? $tenant->metadata->tenant_role ?? $tenant->metadata->type ?? '')));
+
+    if (in_array($role, ['template', 'templates'], true)) {
+        return true;
+    }
+
+    return (bool) preg_match('/template/i', $slug . ' ' . $name);
+}
+
+/**
+ * Filter out template tenants from UI lists.
+ *
+ * The current tenant can be preserved even if it is a template, so internal
+ * owners are not locked out of their own workspace.
+ *
+ * @param array $tenants
+ * @param string $current_slug
+ * @return array
+ */
+function fq_saas_filter_visible_instances(array $tenants, $current_slug = '')
+{
+    $current_slug = strtolower(trim((string) $current_slug));
+    $filtered = [];
+
+    foreach ($tenants as $tenant) {
+        if (empty($tenant)) {
+            continue;
+        }
+
+        $tenant_slug = strtolower(trim((string) ($tenant->slug ?? '')));
+        if ($current_slug !== '' && $tenant_slug === $current_slug) {
+            $filtered[] = $tenant;
+            continue;
+        }
+
+        if (fq_saas_is_template_instance($tenant)) {
+            continue;
+        }
+
+        $filtered[] = $tenant;
+    }
+
+    return array_values($filtered);
+}
+
+/**
  * Retrieves the primary contact associated with a user ID from the master DB.
  *
  * @param int $userid The ID of the user
@@ -336,27 +403,58 @@ function fq_saas_init_shared_options()
         $tenant = fq_saas_tenant();
         if (empty($tenant->package_invoice)) return; // wont share any settings
 
-        $sharing_smtp_email = false;
+    $sharing_smtp_email = false;
 
-        $instance_settings = $CI->app->get_options();
+    $instance_settings = $CI->app->get_options();
 
-        $package_shared_fields = [];
-        $enforced_shared_fields = array_merge(FQ_SAAS_ENFORCED_SHARED_FIELDS, (array) ($tenant->package_invoice->metadata->shared_settings->enforced ?? []));
+    $package_shared_fields = [];
+    $enforced_shared_fields = array_merge(FQ_SAAS_ENFORCED_SHARED_FIELDS, (array) ($tenant->package_invoice->metadata->shared_settings->enforced ?? []));
+    $tenant_slug = strtolower((string) ($tenant->slug ?? ''));
+    $is_demo_instance = function_exists('fq_saas_tenant_is_demo_instance') && fq_saas_tenant_is_demo_instance();
+    if (!$is_demo_instance) {
+        $demo_like_slugs = [
+            'demo',
+            'beauty',
+            'hotel',
+            'warsztat',
+            'nieruchomosc',
+            'nieruchomosci',
+            'logistyka',
+            'ecommerce',
+            'kursy',
+            'serwiswww',
+            'oze',
+            'agencja',
+            'rekrutacja',
+            'medycyna',
+            'eventy',
+            'gastronomia',
+        ];
+        $is_demo_instance = ((int) ($tenant->clientid ?? 0) === 3) || in_array($tenant_slug, $demo_like_slugs, true);
+    }
 
-        //return if no shared fields
-        if (!empty($tenant->package_invoice->metadata->shared_settings->shared)) {
+    if ($is_demo_instance) {
+        $enforced_shared_fields = array_values(array_filter($enforced_shared_fields, function ($field) {
+            return !in_array($field, ['company_logo', 'company_logo_dark', 'favicon'], true);
+        }));
+    }
 
-            $package_shared_fields = (array)$tenant->package_invoice->metadata->shared_settings->shared;
-        }
+    //return if no shared fields
+    if (!empty($tenant->package_invoice->metadata->shared_settings->shared)) {
 
-        $shared_fields = array_unique(array_merge($package_shared_fields, $enforced_shared_fields));
-        $shared_master_settings = fq_saas_master_shared_settings($shared_fields);
+        $package_shared_fields = (array)$tenant->package_invoice->metadata->shared_settings->shared;
+    }
+
+    $shared_fields = array_unique(array_merge($package_shared_fields, $enforced_shared_fields));
+
+    $shared_master_settings = fq_saas_master_shared_settings($shared_fields);
 
         foreach ($shared_master_settings as $setting) {
 
             $field_name = $setting->name;
             $master_value = $setting->value; // Master value
             $tenant_value = $instance_settings[$field_name] ?? $CI->app->get_option($field_name);
+            $is_brand_asset = in_array($field_name, ['company_logo', 'company_logo_dark', 'favicon']);
             $is_enforced_field = in_array($field_name, $enforced_shared_fields);
             $should_force = $is_enforced_field && $tenant_value !== $master_value;
 
@@ -371,7 +469,7 @@ function fq_saas_init_shared_options()
             /**
              * Allow tenant updating images in general settings when the sharing is not forced.
              */
-            if (!$is_enforced_field && in_array($field_name, ['company_logo', 'company_logo_dark', 'favicon'])) {
+            if (!$is_enforced_field && !$is_demo_instance && $is_brand_asset) {
 
                 // Only ensure this run once to improve performance. I.e should only affect company sharing logo and favicon
                 // Retain tenant value when not forced to allow tenant change the images.

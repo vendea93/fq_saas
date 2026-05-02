@@ -26,7 +26,18 @@ defined('FQ_SAAS_TENANT_MODE_DOMAIN') or define('FQ_SAAS_TENANT_MODE_DOMAIN', 'c
 defined('FQ_SAAS_TENANT_MODE_SUBDOMAIN') or define('FQ_SAAS_TENANT_MODE_SUBDOMAIN', 'subdomain');
 
 /** @var string[] List of options field that will should not be controlled by tenants i.e security fields */
-defined('FQ_SAAS_ENFORCED_SHARED_FIELDS') or define('FQ_SAAS_ENFORCED_SHARED_FIELDS', ['allowed_files', 'ticket_attachments_file_extensions']);
+defined('FQ_SAAS_ENFORCED_SHARED_FIELDS') or define('FQ_SAAS_ENFORCED_SHARED_FIELDS', [
+    'allowed_files',
+    'ticket_attachments_file_extensions',
+    'company_logo',
+    'company_logo_dark',
+    'favicon',
+    'pusher_app_id',
+    'pusher_app_key',
+    'pusher_app_secret',
+    'pusher_cluster',
+    'pusher_realtime_notifications',
+]);
 
 /** @var string[] List of dangerous extensions */
 defined('FQ_SAAS_DANGEROUS_EXTENSIONS') or define('FQ_SAAS_DANGEROUS_EXTENSIONS', [

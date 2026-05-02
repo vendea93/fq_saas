@@ -23,9 +23,41 @@ if ($is_tenant) {
     function fq_saas_before_settings_updated_hook($data)
     {
         $tenant = fq_saas_tenant();
+        $is_demo_instance = function_exists('fq_saas_tenant_is_demo_instance') && fq_saas_tenant_is_demo_instance();
+        if (!$is_demo_instance) {
+            $tenant_slug = strtolower((string) ($tenant->slug ?? ''));
+            $demo_like_slugs = [
+                'demo',
+                'beauty',
+                'hotel',
+                'warsztat',
+                'nieruchomosc',
+                'nieruchomosci',
+                'logistyka',
+                'ecommerce',
+                'kursy',
+                'serwiswww',
+                'oze',
+                'agencja',
+                'rekrutacja',
+                'medycyna',
+                'eventy',
+                'gastronomia',
+            ];
+            $is_demo_instance = ((int) ($tenant->clientid ?? 0) === 3) || in_array($tenant_slug, $demo_like_slugs, true);
+        }
 
         // Enforced fields
         $enforced_fields = array_merge(FQ_SAAS_ENFORCED_SHARED_FIELDS, (array) ($tenant->package_invoice->metadata->shared_settings->enforced ?? []));
+
+        // In demo instances allow tenant admin to update branding assets from settings.
+        // Without this, settings save flow reverts logo/favicon back to master values.
+        if ($is_demo_instance) {
+            $enforced_fields = array_values(array_filter($enforced_fields, function ($field) {
+                return !in_array($field, ['company_logo', 'company_logo_dark', 'favicon'], true);
+            }));
+        }
+
         $enforced_settings = fq_saas_master_shared_settings($enforced_fields);
         foreach ($enforced_settings as $setting) {
 

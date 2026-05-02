@@ -1,6 +1,7 @@
 <?php defined('BASEPATH') or exit('No direct script access allowed'); ?>
 
 <?php
+$companies = fq_saas_filter_visible_instances($companies, $companies[0]->slug ?? '');
 $tenant = $companies[0];
 $tenant->package_invoice = $invoice;
 $company = $tenant;

@@ -1,4 +1,68 @@
 <?php
+// === Brakujące klucze uzupełnione w v0.4.2 (pełne PL) ===
+$lang['fq_saas_body_html']                 = 'Treść HTML';
+$lang['fq_saas_body_json']                 = 'Układ JSON';
+$lang['fq_saas_revisions']                 = 'Rewizje (JSON)';
+$lang['fq_saas_landing']                   = 'Strony startowe';
+$lang['fq_saas_client_menu_profile']       = 'Profil';
+$lang['fq_saas_cms_pages_public_api']      = 'Strony CMS (tylko do odczytu)';
+$lang['fq_saas_domain_dns_check']          = 'Sprawdź DNS';
+$lang['fq_saas_feature_limits_compare']    = 'Limity funkcji (konfiguracja)';
+$lang['fq_saas_mrr_active_subscriptions']  = 'Aktywne subskrypcje SaaS';
+$lang['fq_saas_saas_pricing']              = 'Cennik SaaS';
+
+// Komunikat dla instancji demo
+$lang['fq_saas_demo_reset_title']          = 'Tryb demo';
+$lang['fq_saas_demo_reset_body']           = 'To jest instancja demo. Wszystkie dane zostaną automatycznie zresetowane';
+$lang['fq_saas_demo_reset_imminent']       = 'już za chwilę.';
+$lang['fq_saas_demo_reset_in_hm']          = 'za %d godz. %d min.';
+$lang['fq_saas_demo_reset_in_minutes']     = 'za około %d minut.';
+
+// Stripe: kupony + masowa synchronizacja
+$lang['fq_saas_stripe_coupon_id']          = 'ID kuponu Stripe';
+$lang['fq_saas_stripe_coupon_id_hint']     = 'Opcjonalne. Gdy ustawione, subskrypcja przy zakupie automatycznie aktywuje ten kupon Stripe, jeśli klient użyje ?coupon=KOD pasującego do tego wiersza.';
+$lang['fq_saas_stripe_mass_sync']          = 'Synchronizuj wszystko ze Stripe';
+$lang['fq_saas_stripe_mass_sync_confirm']  = 'Wysłać wszystkie pakiety obsługujące Stripe teraz? Utworzy lub zaktualizuje produkty, ceny i podatki w Stripe.';
+
+// Menu i główne sekcje FQ SaaS
+$lang['fq_saas_menu_title']        = 'FlowQuest';
+$lang['fq_saas_dashboard']         = 'Panel główny';
+$lang['fq_saas_api']               = 'API';
+$lang['fq_saas_pricing']           = 'Cennik';
+$lang['fq_saas_landing_builder']   = 'Kreator strony startowej';
+$lang['fq_saas_cms']               = 'Treści CMS';
+$lang['fq_saas_coupons']           = 'Kupony rabatowe';
+$lang['fq_saas_affiliates']        = 'Program partnerski';
+$lang['fq_saas_domains']           = 'Domeny niestandardowe';
+$lang['fq_saas_domain_workflow']   = 'Przepływ domen';
+$lang['fq_saas_invoices']          = 'Faktury';
+$lang['fq_saas_settings']          = 'Ustawienia';
+$lang['fq_saas_update_ext_menu']   = 'Aktualizacje';
+$lang['fq_saas_update_ext']        = 'Aktualizacje rozszerzeń';
+$lang['fq_saas_api_user']          = 'Użytkownicy API';
+$lang['fq_saas_api_token']         = 'Token API';
+
+// Uprawnienia
+$lang['fq_saas_permission_view']   = 'Przeglądanie';
+$lang['fq_saas_permission_create'] = 'Tworzenie';
+$lang['fq_saas_permission_edit']   = 'Edycja';
+$lang['fq_saas_permission_delete'] = 'Usuwanie';
+$lang['fq_saas_permission_denied'] = 'Brak uprawnień';
+
+// Komunikaty wspólne
+$lang['fq_saas_with_error']              = 'z błędem';
+$lang['fq_saas_authentication_required_for_magic_login'] = 'Aby zalogować się magicznie, musisz być zalogowany jako klient.';
+$lang['fq_saas_authentication_error']    = 'Błąd uwierzytelniania';
+$lang['fq_saas_page_not_found']          = 'Strona nie została znaleziona';
+$lang['fq_saas_error_finding_primary_contact'] = 'Nie udało się znaleźć głównej osoby kontaktowej.';
+$lang['fq_saas_api_invalid_credential']  = 'Nieprawidłowe dane uwierzytelniające API';
+$lang['fq_saas_api_key_invalid']         = 'Nieprawidłowy klucz API';
+$lang['fq_saas_api_not_enabled']         = 'API jest wyłączone';
+$lang['fq_saas_invalid_method']          = 'Nieprawidłowa metoda HTTP';
+$lang['fq_saas_invoice_recurring_indicator'] = 'Odnawiane';
+$lang['fq_saas_cron_feature_migration']  = 'Migracja SaaS (cron)';
+$lang['fq_saas_custom_domain']           = 'Domena niestandardowa';
+
 $lang['fq_saas_clear_unpaid_invoice_mid'] = 'Zaległa faktura';
 $lang['fq_saas_clear_unpaid_invoice_message_mid'] = 'Do tej firmy dołączona jest niezapłacona, zaległa faktura.';
 $lang['fq_saas_clear_invoice_btn'] = 'Wyczyść fakturę';
@@ -14,6 +78,10 @@ $lang['fq_saas_no_private_default_package'] = 'Pakiet nie może być jednocześn
 $lang['fq_saas_package'] = 'Pakiet';
 $lang['fq_saas_tenants'] = 'Najemcy';
 $lang['fq_saas_companies'] = 'Firmy';
+$lang['fq_saas_company_subdomain_label'] = 'Adres instancji (subdomena)';
+$lang['fq_saas_company_subdomain_public_hint'] = 'Strona główna:';
+$lang['fq_saas_companies_subdomain_overview_title'] = 'Subdomeny instancji (bez „go”)';
+$lang['fq_saas_companies_subdomain_overview_hint'] = 'Pełny panel administracyjny pod poniższymi adresami. Slug w subdomenie = identyfikator instancji (np. beauty). Wymaga rekordu DNS *.flowquest.pl i SSL wildcard.';
 $lang['fq_saas_single_theme_menu_companies'] = 'Aplikacja';
 $lang['fq_saas_client_menu_companies'] = 'Aplikacje';
 $lang['fq_saas_client_menu_subscription'] = 'Fakturowanie';
@@ -71,7 +139,7 @@ $lang['fq_saas_permission_create'] = 'Tworzenie uprawnień';
 $lang['fq_saas_permission_edit'] = 'Edycja uprawnień';
 $lang['fq_saas_permission_delete'] = 'Usuwanie uprawnień';
 $lang['fq_saas_settings'] = 'Ustawienia';
-$lang['fq_saas_menu_title'] = 'FQ SaaS';
+$lang['fq_saas_menu_title'] = 'FlowQuest';
 $lang['fq_saas_invoices'] = 'Faktury';
 $lang['fq_saas_subscription'] = 'Subskrypcja';
 $lang['fq_saas_invoice_recurring_indicator'] = 'Wskaźnik powtarzalności faktury';
@@ -628,4 +696,13 @@ $lang['fq_saas_package_assigned_clients'] = 'Przypisani klienci';
 $lang['fq_saas_package_assigned_clients_hint'] = 'Wybierz klientów, dla których ten pakiet będzie dostępny. Pozostaw puste lub wybierz puste, aby upewnić się, że jest dostępny dla wszystkich klientów.';
 $lang['fq_saas_allow_default_modules_on_marketplace'] = 'Zezwalaj na domyślne (wbudowane) moduły na rynku.';
 $lang['fq_saas_enable_tenant_admin_modules_page'] = 'Zezwolenie administratorowi dzierżawy na dostęp do strony z listą modułów';
+$lang['fq_saas_plugin_marketplace'] = 'Marketplace wtyczek';
+$lang['fq_saas_plugin_marketplace_subtitle'] = 'Kupuj i instaluj dodatkowe wtyczki FlowQuest w tej przestrzeni demo.';
+$lang['fq_saas_demo_marketplace_notice'] = 'Tryb demo: instalacja płatnych wtyczek jest dostępna tylko dla konta Administrator. Konto Właściciel korzysta wyłącznie z przygotowanej infrastruktury.';
+$lang['fq_saas_demo_marketplace_default_module_desc'] = 'Wbudowany moduł FlowQuest dostępny w tej instancji demo.';
+$lang['fq_saas_marketplace_enable_plugin'] = 'Włącz wtyczkę';
+$lang['fq_saas_marketplace_disable_plugin'] = 'Wyłącz wtyczkę';
+$lang['fq_saas_marketplace_buy_install_plugin'] = 'Kup i zainstaluj';
+$lang['fq_saas_marketplace_projects_desc'] = 'Rozszerzenie modułu Projektów: zaawansowane widoki realizacji, priorytety i raporty zespołu.';
+$lang['fq_saas_marketplace_admin_only_note'] = 'Marketplace jest dostępny po zalogowaniu jako Administrator demo. Konto Właściciel korzysta z przygotowanej infrastruktury.';
 $lang['fq_saas_package_priority'] = 'Priorytet sortowania pakietów (kolejność malejąca)';

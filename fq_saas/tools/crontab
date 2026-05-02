@@ -1,0 +1,2 @@
+* * * * * wget -q -O- https://crm.flowquest.pl/cron/index > /dev/null 2>&1
+*/5 * * * * php /var/www/crm.flowquest.pl/modules/fq_saas/tools/monitor_instances.php > /var/www/crm.flowquest.pl/modules/fq_saas/logs/monitor.log 2>&1

@@ -510,8 +510,32 @@ function fq_saas_get_client_package_invoice($clientid, $options = [])
     $metadata = fq_saas_get_or_save_client_metadata($clientid);
     $metadata = (object)(empty($metadata) ? [] : $metadata);
     $subscription_id = (int)($metadata->subscription_id ?? 0);
-    $subscription_package_id = $metadata->subscription_package_id ?? 0;
-    if (empty($subscription_package_id)) $subscription_id = 0;
+    $subscription_package_id = isset($metadata->subscription_package_id)
+        ? (int) $metadata->subscription_package_id
+        : 0;
+
+    // Bez subscription_package_id gałąź subskrypcji jest wyłączana — wtedy instancje tracą pakiet mimo aktywnej subskrypcji.
+    if ($subscription_id > 0 && $subscription_package_id <= 0) {
+        $pc = fq_saas_column('packageid');
+        $q_resolve = "SELECT `$pc` AS resolved_pkg FROM `$invoice_table`
+            WHERE `clientid` = :clientid AND `subscription_id` = :subid
+            AND `$pc` IS NOT NULL AND `$pc` > 0
+            ORDER BY `datecreated` DESC LIMIT 1";
+        $resolved = fq_saas_raw_query_row($q_resolve, [], true, true, [
+            ':clientid' => $clientid,
+            ':subid'    => $subscription_id,
+        ]);
+        if ($resolved && !empty($resolved->resolved_pkg)) {
+            $subscription_package_id = (int) $resolved->resolved_pkg;
+            fq_saas_get_or_save_client_metadata($clientid, [
+                'subscription_package_id' => $subscription_package_id,
+            ]);
+        }
+    }
+
+    if (empty($subscription_package_id)) {
+        $subscription_id = 0;
+    }
 
     // Check for future trial in meta
     $should_mock = !empty($metadata->trial_period_ends) && !empty($metadata->trial_package_id) && empty($metadata->trial_cancelled);
@@ -982,6 +1006,7 @@ function fq_saas_tenant_demo_reset_info()
 
     $slug = $tenant->slug ?? '';
     if (empty($slug)) return null;
+    if ($slug === 'go') return null;
 
     $demo_raw = fq_saas_tenant_get_super_option('fq_saas_demo_instance');
     if (empty($demo_raw)) return null;
@@ -1008,6 +1033,16 @@ function fq_saas_tenant_demo_reset_info()
         'next_reset_time'     => $next_reset,
         'seconds_until_reset' => $seconds_until,
     ];
+}
+
+/**
+ * Check whether the current tenant is configured as a demo instance.
+ *
+ * @return bool
+ */
+function fq_saas_tenant_is_demo_instance()
+{
+    return !empty(fq_saas_tenant_demo_reset_info());
 }
 
 /**
@@ -2083,13 +2118,14 @@ function fq_saas_tenant_disabled_default_modules(?object $tenant = null, $mode =
 {
     static $cache = [];
 
-    if (isset($cache[$mode]))
-        return $cache[$mode];
-
     $can_cache = false;
 
     // Get the tenant object
     $tenant = $tenant ?? fq_saas_tenant();
+    $cache_key = $mode . ':' . (string) ($tenant->id ?? $tenant->slug ?? 'current');
+
+    if (isset($cache[$cache_key]))
+        return $cache[$cache_key];
 
     // Get the package and modules
     $package = isset($tenant->package_invoice) ? $tenant->package_invoice : null;
@@ -2125,7 +2161,7 @@ function fq_saas_tenant_disabled_default_modules(?object $tenant = null, $mode =
     $tenant_default_disabled_modules = fq_saas_alias_disabled_default_modules($tenant_default_disabled_modules);
 
     if ($can_cache) {
-        $cache[$mode] = $tenant_default_disabled_modules;
+        $cache[$cache_key] = $tenant_default_disabled_modules;
     }
 
     return $tenant_default_disabled_modules;

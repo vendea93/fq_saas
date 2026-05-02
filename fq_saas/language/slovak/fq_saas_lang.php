@@ -629,3 +629,26 @@ $lang['fq_saas_package_assigned_clients_hint'] = 'Vyberte zákazníkov, ktorým 
 $lang['fq_saas_allow_default_modules_on_marketplace'] = 'Povolenie predvolených (zabudovaných) modulov na trhovisku';
 $lang['fq_saas_enable_tenant_admin_modules_page'] = 'Umožniť správcovi nájomcu prístup na stránku so zoznamom modulov';
 $lang['fq_saas_package_priority'] = 'Priorita triedenia balíkov (zostupné poradie)';
+
+// === FQ SaaS menu & permission keys (auto-added fallback) ===
+$lang['fq_saas_menu_title']        = $lang['fq_saas_menu_title']        ?? 'FQ SaaS';
+$lang['fq_saas_dashboard']         = $lang['fq_saas_dashboard']         ?? 'Dashboard';
+$lang['fq_saas_api']               = $lang['fq_saas_api']               ?? 'API';
+$lang['fq_saas_pricing']           = $lang['fq_saas_pricing']           ?? 'Pricing';
+$lang['fq_saas_landing_builder']   = $lang['fq_saas_landing_builder']   ?? 'Landing builder';
+$lang['fq_saas_cms']               = $lang['fq_saas_cms']               ?? 'CMS';
+$lang['fq_saas_coupons']           = $lang['fq_saas_coupons']           ?? 'Discount coupons';
+$lang['fq_saas_affiliates']        = $lang['fq_saas_affiliates']        ?? 'Affiliates';
+$lang['fq_saas_domains']           = $lang['fq_saas_domains']           ?? 'Custom domains';
+$lang['fq_saas_domain_workflow']   = $lang['fq_saas_domain_workflow']   ?? 'Domain workflow';
+$lang['fq_saas_invoices']          = $lang['fq_saas_invoices']          ?? 'Invoices';
+$lang['fq_saas_settings']          = $lang['fq_saas_settings']          ?? 'Settings';
+$lang['fq_saas_update_ext_menu']   = $lang['fq_saas_update_ext_menu']   ?? 'Updates';
+$lang['fq_saas_update_ext']        = $lang['fq_saas_update_ext']        ?? 'Extension updates';
+$lang['fq_saas_api_user']          = $lang['fq_saas_api_user']          ?? 'API users';
+$lang['fq_saas_api_token']         = $lang['fq_saas_api_token']         ?? 'API token';
+$lang['fq_saas_permission_view']   = $lang['fq_saas_permission_view']   ?? 'View';
+$lang['fq_saas_permission_create'] = $lang['fq_saas_permission_create'] ?? 'Create';
+$lang['fq_saas_permission_edit']   = $lang['fq_saas_permission_edit']   ?? 'Edit';
+$lang['fq_saas_permission_delete'] = $lang['fq_saas_permission_delete'] ?? 'Delete';
+$lang['fq_saas_permission_denied'] = $lang['fq_saas_permission_denied'] ?? 'Permission denied';

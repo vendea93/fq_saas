@@ -41,8 +41,23 @@ function fq_saas_apply_tenant_db_constants(): void
     $dsn = ['host' => '', 'user' => '', 'password' => '', 'dbname' => ''];
 
     if (isset($GLOBALS[FQ_SAAS_MODULE_NAME . '_tenant'])) {
-        $GLOBALS[FQ_SAAS_MODULE_NAME . '_tenant']->dsn = $GLOBALS['_encryption']->decrypt($GLOBALS[FQ_SAAS_MODULE_NAME . '_tenant']->dsn);
-        $dsn = (array)fq_saas_parse_dsn($GLOBALS[FQ_SAAS_MODULE_NAME . '_tenant']->dsn);
+        try {
+            $raw = $GLOBALS[FQ_SAAS_MODULE_NAME . '_tenant']->dsn ?? '';
+            if (!empty($raw)) {
+                $decrypted = $GLOBALS['_encryption']->decrypt($raw);
+                $GLOBALS[FQ_SAAS_MODULE_NAME . '_tenant']->dsn = $decrypted;
+
+                if (!empty($decrypted)) {
+                    $dsn = (array)fq_saas_parse_dsn($decrypted);
+                }
+            }
+        } catch (\Throwable $e) {
+            // Fallback to default DB constants when DSN is empty/invalid.
+            // This is important for multitenancy setups where the DSN field can be blank.
+            if (function_exists('log_message')) {
+                log_message('error', 'fq_saas_apply_tenant_db_constants: invalid DSN - ' . $e->getMessage());
+            }
+        }
     }
 
     if (!defined('APP_DB_HOSTNAME')) {
@@ -57,8 +72,22 @@ function fq_saas_apply_tenant_db_constants(): void
     if (!defined('APP_DB_NAME')) {
         define('APP_DB_NAME', empty($dsn['dbname']) ? APP_DB_NAME_DEFAULT : $dsn['dbname']);
     }
+    $GLOBALS['fq_saas_db_override'] = [
+        'hostname' => empty($dsn['host']) ? APP_DB_HOSTNAME_DEFAULT : $dsn['host'],
+        'username' => empty($dsn['user']) ? APP_DB_USERNAME_DEFAULT : $dsn['user'],
+        'password' => empty($dsn['password']) ? APP_DB_PASSWORD_DEFAULT : $dsn['password'],
+        'database' => empty($dsn['dbname']) ? APP_DB_NAME_DEFAULT : $dsn['dbname'],
+    ];
     if (fq_saas_is_tenant() && !defined('APP_DB_PREFIX')) {
         define('APP_DB_PREFIX', fq_saas_tenant_db_prefix(fq_saas_tenant_slug()));
+    }
+    if (
+        fq_saas_is_tenant()
+        && defined('FQ_SAAS_TENANT_DB_NAME_PREFIX')
+        && FQ_SAAS_TENANT_DB_NAME_PREFIX !== ''
+        && !empty($GLOBALS['fq_saas_db_override']['database'])
+    ) {
+        $GLOBALS['fq_saas_db_override']['database'] = FQ_SAAS_TENANT_DB_NAME_PREFIX . $GLOBALS['fq_saas_db_override']['database'];
     }
 
     $applied = true;
@@ -66,7 +95,10 @@ function fq_saas_apply_tenant_db_constants(): void
 
 fq_saas_apply_tenant_db_constants();
 
-hooks()->add_action('app_init', 'fq_saas_apply_tenant_db_constants', PHP_INT_MIN);
+$fq_saas_hooks = function_exists('hooks') ? hooks() : null;
+if ($fq_saas_hooks) {
+    $fq_saas_hooks->add_action('app_init', 'fq_saas_apply_tenant_db_constants', PHP_INT_MIN);
+}
 
 // Run middlewares for the tenant. i.e permission and module control. Also add important hooks.
 fq_saas_middleware();
@@ -79,7 +111,10 @@ fq_saas_middleware();
  * Early time hooks for email template.
  * Must be placed here in hooks to ensure its loaded with perfex email template loading.
  */
-hooks()->add_filter('register_merge_fields', 'fq_saas_email_template_merge_fields');
+$fq_saas_hooks = function_exists('hooks') ? hooks() : null;
+if ($fq_saas_hooks) {
+    $fq_saas_hooks->add_filter('register_merge_fields', 'fq_saas_email_template_merge_fields');
+}
 function fq_saas_email_template_merge_fields($fields)
 {
     $fields[] =  'fq_saas/merge_fields/fq_saas_company_merge_fields';
@@ -91,7 +126,10 @@ function fq_saas_email_template_merge_fields($fields)
  * Set max number for priority to ensure the function is more or less the last to be called.
  * However, we nee to set the hook in early part of execution to ensure its availability to other script using media folder.
  */
-hooks()->add_filter('get_media_folder', 'fq_saas_set_media_folder_hook', PHP_INT_MAX);
+$fq_saas_hooks = function_exists('hooks') ? hooks() : null;
+if ($fq_saas_hooks) {
+    $fq_saas_hooks->add_filter('get_media_folder', 'fq_saas_set_media_folder_hook', PHP_INT_MAX);
+}
 function fq_saas_set_media_folder_hook($data)
 {
     $tenant_slug = fq_saas_is_tenant() ? fq_saas_tenant_slug() : fq_saas_master_tenant_slug();
@@ -103,7 +141,9 @@ function fq_saas_set_media_folder_hook($data)
 /********OTHER MIDDLEWARE SPECIFIC HOOKS ******/
 $folder_path = __DIR__ . '/my_hooks/';
 $feature_hook_files = glob($folder_path . '*.php');
-$feature_hook_files = hooks()->apply_filters('fq_saas_extra_middleware_hook_files', $feature_hook_files);
+if ($fq_saas_hooks) {
+    $feature_hook_files = $fq_saas_hooks->apply_filters('fq_saas_extra_middleware_hook_files', $feature_hook_files);
+}
 foreach ($feature_hook_files as $file) {
     if (is_file($file)) {
         require_once $file;

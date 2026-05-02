@@ -7,6 +7,7 @@
 
         <?php
 
+        $companies = fq_saas_filter_visible_instances($companies);
         $autolaunch_option = get_option('fq_saas_autolaunch_instance');
         foreach ($companies as $company) :
             $company_options[] = ['key' => $company->slug, 'name' => $company->name . " - $company->slug"];

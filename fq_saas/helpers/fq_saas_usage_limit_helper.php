@@ -41,6 +41,36 @@ function fq_saas_register_limitation_filters()
 
     // Register for storage limit
     $tenant = fq_saas_tenant();
+    $is_demo_instance = function_exists('fq_saas_tenant_is_demo_instance') && fq_saas_tenant_is_demo_instance();
+    if (!$is_demo_instance) {
+        $tenant_slug = strtolower((string) ($tenant->slug ?? ''));
+        $demo_like_slugs = [
+            'demo',
+            'beauty',
+            'hotel',
+            'warsztat',
+            'nieruchomosc',
+            'nieruchomosci',
+            'logistyka',
+            'ecommerce',
+            'kursy',
+            'serwiswww',
+            'oze',
+            'agencja',
+            'rekrutacja',
+            'medycyna',
+            'eventy',
+            'gastronomia',
+        ];
+        $is_demo_instance = ((int) ($tenant->clientid ?? 0) === 3) || in_array($tenant_slug, $demo_like_slugs, true);
+    }
+
+    // In demo instances allow branding uploads without storage quota blocks.
+    // This keeps all demo admin accounts consistent across instances.
+    if ($is_demo_instance) {
+        return;
+    }
+
     if (!fq_saas_tenant_storage_is_unlimited($tenant)) {
 
         // Check tenant storage limits

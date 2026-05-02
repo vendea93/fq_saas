@@ -10,6 +10,7 @@ if ($is_tenant && fq_saas_tenant_is_enabled('instance_switch')) {
             $clientid = $tenant->clientid;
             $table = fq_saas_table('companies');
             $instances = fq_saas_raw_query("SELECT * from `$table` WHERE `clientid`='$clientid' AND `status`='active';", [], true);
+            $instances = fq_saas_filter_visible_instances($instances, $tenant->slug ?? '');
             $theme = $tenant->package_invoice->metadata->client_theme ?? '';
             $can_create_new_instance = $theme === 'agency';
             if (count($instances) > 1 || $can_create_new_instance) {
@@ -21,7 +22,15 @@ if ($is_tenant && fq_saas_tenant_is_enabled('instance_switch')) {
                         ';
                 foreach ($instances as $key => $instant) {
                     $instant->package_invoice = $tenant->package_invoice;
-                    $url = $instant->slug === $tenant->slug ? '#' : admin_url('billing/my_account?redirect=' . fq_saas_tenant_base_url($instant) . '&target=tenant');
+                    $url = '#';
+                    if ($instant->slug !== $tenant->slug) {
+                        // Dla demo tenantów przechodzimy od razu do panelu admin z autologowaniem.
+                        if ((int)($tenant->clientid ?? 0) === 3 && (int)($instant->clientid ?? 0) === 3) {
+                            $url = rtrim(fq_saas_tenant_base_url($instant), '/') . '/admin/authentication?demo_account=owner&autologin=1';
+                        } else {
+                            $url = admin_url('billing/my_account?redirect=' . fq_saas_tenant_base_url($instant) . '&target=tenant');
+                        }
+                    }
                     echo "<li><a href='$url'>$instant->name</a></li>";
                 }
                 if ($can_create_new_instance)
